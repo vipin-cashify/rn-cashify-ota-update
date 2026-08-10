@@ -1,0 +1,1 @@
+# rn-cashify-ota-update
