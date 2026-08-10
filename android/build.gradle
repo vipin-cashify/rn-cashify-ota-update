@@ -1,0 +1,62 @@
+buildscript {
+    ext.safeExtGet = { prop, fallback ->
+        rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.5.0")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${safeExtGet('kotlinVersion', '2.1.20')}")
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    namespace "in.cashify.otaupdate"
+    compileSdkVersion safeExtGet('compileSdkVersion', 36)
+
+    defaultConfig {
+        minSdkVersion safeExtGet('minSdkVersion', 24)
+        targetSdkVersion safeExtGet('targetSdkVersion', 36)
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    sourceSets {
+        main {
+            java.srcDirs += 'src/main/java'
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    google()
+}
+
+dependencies {
+    // Versionless — resolved by RN's gradle plugin (RN >= 0.71).
+    implementation 'com.facebook.react:react-android'
+
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation "androidx.core:core-ktx:${safeExtGet('coreKtxVersion', '1.13.1')}"
+
+    // Remote Config. Host can override the BoM via rootProject ext `firebaseBomVersion`
+    // to match its own Firebase BoM (the host MUST have google-services configured).
+    implementation platform("com.google.firebase:firebase-bom:${safeExtGet('firebaseBomVersion', '33.7.0')}")
+    implementation 'com.google.firebase:firebase-config-ktx'
+
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${safeExtGet('kotlinxCoroutinesVersion', '1.10.2')}"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:${safeExtGet('kotlinxCoroutinesVersion', '1.10.2')}"
+}

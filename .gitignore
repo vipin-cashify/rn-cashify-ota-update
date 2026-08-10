@@ -1,0 +1,9 @@
+node_modules/
+android/build/
+android/.gradle/
+*.iml
+.DS_Store
+*.tgz
+.yarn/
+.pnp.*
+yarn.lock

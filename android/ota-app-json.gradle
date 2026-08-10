@@ -1,0 +1,39 @@
+/**
+ * rn-cashify-ota-update: packages the host repo's app.json into APK assets so
+ * the native OTA module manager can read the `otaModules` config at runtime.
+ *
+ * Usage — in the HOST app's android/app/build.gradle, anywhere AFTER the
+ * `apply plugin: "com.android.application"` line:
+ *
+ *   apply from: "../../node_modules/rn-cashify-ota-update/android/ota-app-json.gradle"
+ *
+ * The app.json is located at <android rootProject>/../app.json (the RN repo
+ * root). Override with `otaAppJsonFile` in the root gradle.properties or via
+ * -PotaAppJsonFile=/abs/path if the layout differs.
+ */
+if (!project.plugins.hasPlugin('com.android.application')) {
+    throw new GradleException(
+        "rn-cashify-ota-update/ota-app-json.gradle must be applied from the app module " +
+        "AFTER `apply plugin: 'com.android.application'`")
+}
+
+def otaAppJsonFile = rootProject.hasProperty('otaAppJsonFile')
+    ? rootProject.file(rootProject.property('otaAppJsonFile'))
+    : new File(rootProject.projectDir.parentFile, 'app.json')
+
+if (!otaAppJsonFile.exists()) {
+    logger.warn("rn-cashify-ota-update: app.json not found at ${otaAppJsonFile} — OTA module config will be missing (OTA disabled at runtime)")
+}
+
+def otaGeneratedAssetsDir = layout.buildDirectory.dir('generated/otaAssets')
+
+tasks.register('copyOtaAppJson', Copy) {
+    from otaAppJsonFile
+    into otaGeneratedAssetsDir
+}
+
+tasks.named('preBuild') {
+    dependsOn 'copyOtaAppJson'
+}
+
+android.sourceSets.main.assets.srcDirs += otaGeneratedAssetsDir
