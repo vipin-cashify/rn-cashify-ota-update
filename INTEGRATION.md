@@ -193,7 +193,7 @@ create up to 4 kinds of keys. For our MyShop example (`configKey: "myshop"`):
 | `rnb_myshop_enable_safe_mode` | Boolean | `false` | Per-module kill switch. `true` → every device deletes *myshop*'s downloaded bundles and pins to the shipped bundle until you set it back. **One per module, optional (unset = false).** |
 | `rn_enable_safe_mode` | Boolean | `false` | GLOBAL kill switch — same as above but for ALL modules at once. |
 
-`rn_bundle_url` per environment:
+`rn_bundle_url` per environment (Cashify lego buckets — the default):
 
 | Env | Value |
 |---|---|
@@ -201,6 +201,33 @@ create up to 4 kinds of keys. For our MyShop example (`configKey: "myshop"`):
 | beta | `https://rnd.beta.lego.cashify.in` |
 | canary | `https://rnd.canary.lego.cashify.in` |
 | prod | `https://rnd.lego.cashify.in` |
+
+### Hosting somewhere other than S3 (optional)
+
+S3 is NOT required. The device simply does an HTTP GET on a URL it builds as:
+
+```
+<rn_bundle_url>/<modulePath>/<version>/<bundleName>.zip
+     │                │           │         └ index.android.bundle / main.jsbundle
+     │                │           └ from rnb_<configKey>_latest_version
+     │                └ from app.json
+     └ from Remote Config
+```
+
+So any static file host works (S3, GCS, Firebase Hosting, your own nginx,
+Azure Blob, …) as long as:
+
+1. It's **HTTPS** and publicly reachable (the downloader sends no auth headers).
+2. Files are served at exactly that **path convention**.
+3. The content is the **gzipped bundle produced by the publish bin**
+   (`--dry-run=true` builds the artifact without uploading — host it yourself).
+4. The server does **NOT** set a `Content-Encoding: gzip` header (transparent
+   decompression would break the client-side gunzip).
+
+Note the design: Remote Config holds the **base URL**, not a full per-file
+link. The versioned folder structure is what makes version comparison,
+rollback and stale-bundle cleanup work — an arbitrary standalone download link
+is deliberately not supported.
 
 ### ⚠️ If several app flavors share one Firebase project
 
