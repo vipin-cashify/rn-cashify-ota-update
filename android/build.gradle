@@ -55,7 +55,14 @@ dependencies {
     // Remote Config. Host can override the BoM via rootProject ext `firebaseBomVersion`
     // to match its own Firebase BoM (the host MUST have google-services configured).
     implementation platform("com.google.firebase:firebase-bom:${safeExtGet('firebaseBomVersion', '33.7.0')}")
-    implementation 'com.google.firebase:firebase-config-ktx'
+    // Base artifact, NOT `-ktx`: Firebase BoM 34.x removed every `-ktx`
+    // artifact (the Kotlin extensions were folded into the base modules), so
+    // the BoM no longer pins a version for them and `firebase-config-ktx`
+    // resolves to an empty version — "Could not find
+    // com.google.firebase:firebase-config-ktx:". The extensions this module
+    // uses (`Firebase.remoteConfig`, `remoteConfigSettings { }`) ship inside
+    // `firebase-config` itself, so nothing is lost.
+    implementation 'com.google.firebase:firebase-config'
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${safeExtGet('kotlinxCoroutinesVersion', '1.10.2')}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:${safeExtGet('kotlinxCoroutinesVersion', '1.10.2')}"
